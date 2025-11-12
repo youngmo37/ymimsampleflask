@@ -9,6 +9,10 @@ resources:
 - repo: self
 
 variables:
+  ## Add this under variables section in the pipeline
+  azureSubscription: 7190cb4f-d13e-4aed-8cd8-f9b72dec5572
+  appName: ymimsample-app-test
+  containerRegistry: caeaacd2e44bacr
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '179209d7-3a3c-423d-9f90-fbec25e69147'
   imageRepository: 'youngmoymimsampleflask'
@@ -37,3 +41,32 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
+
+
+    ## Add the below snippet at the end of your pipeline
+    - task: AzureWebAppContainer@1
+      displayName: 'Azure Web App on Container Deploy'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appName: $(appName)
+        containers: $(containerRegistry)/$(imageRepository):$(tag)
+    - task: AzureWebAppContainer@1
+      inputs:
+        azureSubscription: '7190cb4f-d13e-4aed-8cd8-f9b72dec5572'
+        appName: 'ymimsample-app-test'
+        containers: $(containerRegistry)/$(imageRepository):$(tag)
+        deployToSlotOrASE: true
+        resourceGroupName: 'myapp-rg'
+        slotName: staging
+    
+    - task: AzureAppServiceManage@0
+      inputs:
+        azureSubscription: '7190cb4f-d13e-4aed-8cd8-f9b72dec5572'
+        WebAppName: 'ymimsample-app-test'
+        ResourceGroupName: 'myapp-rg'
+        SourceSlot: staging
+        SwapWithProduction: true
+          
+
+          
+          
